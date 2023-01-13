@@ -14,5 +14,22 @@
     "description": "Welcoming Rocket.Chat users",
     "implements": [
         "IPostRoomUserJoined"
+    ],
+    "permissions": [
+        {
+            "name": "ui.registerButtons"
+        },
+        {
+            "name": "persistence"
+        },
+        {
+            "name": "room.read"
+        },
+        {
+            "name": "room.write"
+        },
+        {
+            "name": "message.write"
+        }
     ]
 }

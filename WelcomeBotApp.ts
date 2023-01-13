@@ -1,5 +1,7 @@
 import {
   IAppAccessors,
+  IConfigurationExtend,
+  IEnvironmentRead,
   IHttp,
   ILogger,
   IModify,
@@ -15,7 +17,14 @@ import {
   IRoomUserJoinedContext,
   RoomType,
 } from "@rocket.chat/apps-engine/definition/rooms";
+import { IUIKitResponse, UIKitActionButtonInteractionContext, UIKitViewSubmitInteractionContext } from "@rocket.chat/apps-engine/definition/uikit";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { buttons } from "./config/Buttons";
+import { settings } from "./config/Settings";
+import { ActionButtonHandler } from "./handlers/ActionButtonHandlers";
+import { ViewSubmitHandler } from "./handlers/ViewSubmitHandlers";
+import { sendNotification } from "./lib/SendNotification";
+import { WelcomePersistence } from "./persistence/WelcomePersistence";
 
 export class WelcomeBotApp extends App implements IPostRoomUserJoined {
   constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -29,13 +38,67 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     persistence: IPersistence,
     modify: IModify
   ): Promise<void> {
-    console.log("USER JOINED ROOM CONTEXT", context);
-    const message = "Welcome Message!";
-    await this.sendDirect(context, read, modify, message, false);
+    // get welcome settings for this channel
+    const channel_config = await WelcomePersistence.get_room_config(read, context.room.id)
+    const notification_text = channel_config[0]["config"]["notification_text"]
+    if(notification_text){
+      await sendNotification(modify, context.room, context.joiningUser, notification_text)
+    }
+    //await this.sendDirect(context, read, modify, message, false);
     // emulate joined user direct
-    await this.sendDirect(context, read, modify, "/start", true);
-  
+    //await this.sendDirect(context, read, modify, "/start", true);
   }
+
+  public async extendConfiguration(
+    configuration: IConfigurationExtend
+  ): Promise<void> {
+    // configuration
+    await Promise.all(
+      settings.map((setting) => configuration.settings.provideSetting(setting))
+    );
+    // room action menu
+    await Promise.all(
+      buttons.map((button) => configuration.ui.registerButton(button))
+    );
+  }
+
+  public async executeActionButtonHandler(
+    context: UIKitActionButtonInteractionContext,
+    read: IRead,
+    http: IHttp,
+    persistence: IPersistence,
+    modify: IModify
+  ): Promise<IUIKitResponse> {
+    // lets just move this execution to another file to keep DemoApp.ts clean.
+    return new ActionButtonHandler().executor(
+      context,
+      read,
+      http,
+      persistence,
+      modify,
+      this.getLogger()
+    );
+  }
+
+  public async executeViewSubmitHandler(
+    context: UIKitViewSubmitInteractionContext,
+    read: IRead,
+    http: IHttp,
+    persistence: IPersistence,
+    modify: IModify
+) {
+    // same for View SubmitHandler, moving to another Class
+    return new ViewSubmitHandler().executor(
+        context,
+        read,
+        http,
+        persistence,
+        modify,
+        this.getLogger()
+    );
+}  
+
+  // HELPERS
 
   private async getOrCreateDirectRoom(
     read: IRead,
@@ -89,8 +152,8 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     const sender = context.joiningUser; // get the sender from context
     // this will output the message as the joined user
     // useful for bot triggering
-    if (emulate_sender){
-      messageStructure.setSender(sender)
+    if (emulate_sender) {
+      messageStructure.setSender(sender);
     }
     // get the appUser username
     const appUser = await read.getUserReader().getAppUser();
@@ -105,32 +168,4 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     messageStructure.setRoom(room).setText(message); // set the text message
     await modify.getCreator().finish(messageStructure); // sends the message in the room.
   }
-
-  // private async sendDirect(
-  //   context: IRoomUserJoinedContext,
-  //   read: IRead,
-  //   modify: IModify,
-  //   message: string
-  // ): Promise<void> {
-  //   if (["GENERAL", "9eWKNFDGF4iCSStwN"].includes(context.room.id)){
-  //       const messageStructure = modify.getCreator().startMessage();
-  //   // TODO find a way to get app bot username
-  //   var room = await read
-  //     .getRoomReader()
-  //     .getDirectByUsernames([context.joiningUser.username, "welcome-bot.bot"]);
-  //   console.log("SENDING DIRECT!!!", room);
-  //   if (!room) {
-  //     //create room
-  //     // TODO CREATE ROOM WHEN NO ROOM
-  //     console.log("NO ROOM!!!");
-  //   } else {
-  //     console.log("ROOMFOUND!!!");
-  //   }
-  //   messageStructure.setRoom(room).setText(message); // set the text message
-
-  //   await modify.getCreator().finish(messageStructure); // sends the message in the room.
-
-  //   }
-
-  // }
 }
