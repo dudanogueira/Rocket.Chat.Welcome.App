@@ -33,9 +33,15 @@ export async function configModal(
   //const notification_text = records[0]["config"]["enabled"]
   blockBuilder.addSectionBlock({
     text: blockBuilder.newMarkdownTextObject(
-      `*Channel #${room.slugifiedName}*`
+      `Channel #${room.slugifiedName}`
     ),
   });
+  // tell about template tips
+  blockBuilder.addSectionBlock({
+    text: blockBuilder.newMarkdownTextObject(
+      `Tip: you can use context variables, like such: "Welcome @{{user.username}} to #{{room.slugifiedName}}"`
+    ),
+  });  
   // select enabled or disabled
   blockBuilder.addInputBlock({
     blockId: "welcome-config",
@@ -61,7 +67,7 @@ export async function configModal(
   blockBuilder.addInputBlock({
     blockId: "welcome-config",
     label: {
-      text: "Text to notify joining users (only shows to user)",
+      text: `Text to notify joining users on #${room.slugifiedName} (only shows to user)`,
       type: TextObjectType.PLAINTEXT,
     },
     element: blockBuilder.newPlainTextInputElement({
@@ -100,7 +106,7 @@ export async function configModal(
   blockBuilder.addInputBlock({
     blockId: "welcome-config",
     label: {
-      text: "Text to emulate the user sending to the bot \n(so it triggers the bot)",
+      text: "Text to emulate the user sending to the bot \n(used when you want to trigger the bot)",
       type: TextObjectType.MARKDOWN,
     },
     element: blockBuilder.newPlainTextInputElement({

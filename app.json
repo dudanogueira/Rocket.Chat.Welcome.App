@@ -11,7 +11,7 @@
     "name": "Welcome Bot",
     "nameSlug": "welcome-bot",
     "classFile": "WelcomeBotApp.ts",
-    "description": "Welcoming Rocket.Chat users",
+    "description": "Welcome joining users on a channel with automated custom messages, direct and notifications.",
     "implements": [
         "IPostRoomUserJoined"
     ],

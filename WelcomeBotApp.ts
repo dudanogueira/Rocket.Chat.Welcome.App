@@ -17,14 +17,21 @@ import {
   IRoomUserJoinedContext,
   RoomType,
 } from "@rocket.chat/apps-engine/definition/rooms";
-import { IUIKitResponse, UIKitActionButtonInteractionContext, UIKitViewSubmitInteractionContext } from "@rocket.chat/apps-engine/definition/uikit";
+import {
+  IUIKitResponse,
+  UIKitActionButtonInteractionContext,
+  UIKitViewSubmitInteractionContext,
+} from "@rocket.chat/apps-engine/definition/uikit";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { buttons } from "./config/Buttons";
 import { settings } from "./config/Settings";
 import { ActionButtonHandler } from "./handlers/ActionButtonHandlers";
 import { ViewSubmitHandler } from "./handlers/ViewSubmitHandlers";
+import { sendMessage } from "./lib/SendMessage";
 import { sendNotification } from "./lib/SendNotification";
 import { WelcomePersistence } from "./persistence/WelcomePersistence";
+
+const mustache = require("mustache");
 
 export class WelcomeBotApp extends App implements IPostRoomUserJoined {
   constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -39,14 +46,42 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     modify: IModify
   ): Promise<void> {
     // get welcome settings for this channel
-    const channel_config = await WelcomePersistence.get_room_config(read, context.room.id)
-    const notification_text = channel_config[0]["config"]["notification_text"]
-    if(notification_text){
-      await sendNotification(modify, context.room, context.joiningUser, notification_text)
+    const channel_config = await WelcomePersistence.get_room_config(
+      read,
+      context.room.id
+    );
+    // get context vars for the messages
+    const vars = { room: context.room, user: context.joiningUser };
+    // NOTIFICATION
+    var template = channel_config[0]["config"]["notification_text"];
+    if (template) {
+      // render text
+      const notification_text = mustache.render(template, vars);
+      await sendNotification(
+        modify,
+        context.room,
+        context.joiningUser,
+        notification_text
+      );
     }
-    //await this.sendDirect(context, read, modify, message, false);
-    // emulate joined user direct
-    //await this.sendDirect(context, read, modify, "/start", true);
+    // MESSAGE
+    var template = channel_config[0]["config"]["message_text"];
+    if (template) {
+      const message_text = mustache.render(template, vars);
+      await sendMessage(modify, context.room, message_text);
+    }
+    // DIRECT
+    var template = channel_config[0]["config"]["direct_text"];
+    if (template) {
+      const direct_text = mustache.render(template, vars);
+      await this.sendDirect(context, read, modify, direct_text, false);
+    }
+    // EMULATE
+    var template = channel_config[0]["config"]["direct_emulate_text"];
+    if (template) {
+      const direct_emulate_text = mustache.render(template, vars);
+      await this.sendDirect(context, read, modify, direct_emulate_text, true);
+    }
   }
 
   public async extendConfiguration(
@@ -86,17 +121,17 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     http: IHttp,
     persistence: IPersistence,
     modify: IModify
-) {
+  ) {
     // same for View SubmitHandler, moving to another Class
     return new ViewSubmitHandler().executor(
-        context,
-        read,
-        http,
-        persistence,
-        modify,
-        this.getLogger()
+      context,
+      read,
+      http,
+      persistence,
+      modify,
+      this.getLogger()
     );
-}  
+  }
 
   // HELPERS
 
