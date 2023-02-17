@@ -25,7 +25,6 @@ export class ViewSubmitHandler {
       let room_id = data.view.submit?.actionId.split("#")[1];
       if (state) {
         const config = state["welcome-config"];
-        console.log("config ", config);
         const update = await WelcomePersistence.update_welcome_config(
           persistence,
           room_id,

@@ -24,14 +24,12 @@ import {
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { buttons } from "./config/Buttons";
-import { settings } from "./config/Settings";
 import { ActionButtonHandler } from "./handlers/ActionButtonHandlers";
 import { ViewSubmitHandler } from "./handlers/ViewSubmitHandlers";
 import { sendMessage } from "./lib/SendMessage";
 import { sendNotification } from "./lib/SendNotification";
 import { WelcomePersistence } from "./persistence/WelcomePersistence";
 
-const mustache = require("mustache");
 
 export class WelcomeBotApp extends App implements IPostRoomUserJoined {
   constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
@@ -51,12 +49,14 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
       context.room.id
     );
     // get context vars for the messages
-    const vars = { room: context.room, user: context.joiningUser };
+    var vars = {}
+    vars["{{user.username}}"] = context.joiningUser.username
+    vars["{{room.slugifiedName}}"] = context.room.slugifiedName
     // NOTIFICATION
     var template = channel_config[0]["config"]["notification_text"];
     if (template) {
       // render text
-      const notification_text = mustache.render(template, vars);
+      var notification_text = this.replaceAll(template, vars)
       await sendNotification(
         modify,
         context.room,
@@ -67,19 +67,19 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     // MESSAGE
     var template = channel_config[0]["config"]["message_text"];
     if (template) {
-      const message_text = mustache.render(template, vars);
+      var message_text = this.replaceAll(template, vars)
       await sendMessage(modify, context.room, message_text);
     }
     // DIRECT
     var template = channel_config[0]["config"]["direct_text"];
     if (template) {
-      const direct_text = mustache.render(template, vars);
+      const direct_text = this.replaceAll(template, vars)
       await this.sendDirect(context, read, modify, direct_text, false);
     }
     // EMULATE
     var template = channel_config[0]["config"]["direct_emulate_text"];
     if (template) {
-      const direct_emulate_text = mustache.render(template, vars);
+      const direct_emulate_text = this.replaceAll(template, vars)
       await this.sendDirect(context, read, modify, direct_emulate_text, true);
     }
   }
@@ -87,10 +87,6 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
   public async extendConfiguration(
     configuration: IConfigurationExtend
   ): Promise<void> {
-    // configuration
-    await Promise.all(
-      settings.map((setting) => configuration.settings.provideSetting(setting))
-    );
     // room action menu
     await Promise.all(
       buttons.map((button) => configuration.ui.registerButton(button))
@@ -202,5 +198,14 @@ export class WelcomeBotApp extends App implements IPostRoomUserJoined {
     ])) as IRoom;
     messageStructure.setRoom(room).setText(message); // set the text message
     await modify.getCreator().finish(messageStructure); // sends the message in the room.
+  }
+
+  private replaceAll(str, vars: any) {
+
+    for (const [key, value] of Object.entries(vars)) {
+      str = str.replace(new RegExp(key, 'g'), value);
+    }
+
+    return str
   }
 }

@@ -1,1 +1,35 @@
-{"id":"5e6fc7b3-bd0a-4dfb-a777-bf1fb5b92904","version":"0.0.1","requiredApiVersion":"^1.19.0","iconFile":"icon.png","author":{"name":"Duda Nogueira","homepage":"http://github.com/dudanogueira/Rocket.Chat.WelcomeBot.App","support":"http://github.com/dudanogueira/Rocket.Chat.WelcomeBot.App"},"name":"Welcome Bot","nameSlug":"welcome-bot","classFile":"WelcomeBotApp.ts","description":"Welcome joining users on a channel with automated custom messages, direct and notifications.","implements":["IPostRoomUserJoined"],"permissions":[{"name":"ui.registerButtons"},{"name":"persistence"},{"name":"room.read"},{"name":"room.write"},{"name":"message.write"}]}
+{
+    "id": "5e6fc7b3-bd0a-4dfb-a777-bf1fb5b92904",
+    "version": "0.0.2",
+    "requiredApiVersion": "^1.36.0",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Duda Nogueira",
+        "homepage": "http://github.com/dudanogueira/Rocket.Chat.WelcomeBot.App",
+        "support": "http://github.com/dudanogueira/Rocket.Chat.WelcomeBot.App"
+    },
+    "name": "Welcome Bot",
+    "nameSlug": "welcome",
+    "classFile": "WelcomeBotApp.ts",
+    "description": "Welcome joining users on a channel with automated custom messages, direct and notifications.",
+    "implements": [
+        "IPostRoomUserJoined"
+    ],
+    "permissions": [
+        {
+            "name": "ui.registerButtons"
+        },
+        {
+            "name": "persistence"
+        },
+        {
+            "name": "room.read"
+        },
+        {
+            "name": "room.write"
+        },
+        {
+            "name": "message.write"
+        }
+    ]
+}

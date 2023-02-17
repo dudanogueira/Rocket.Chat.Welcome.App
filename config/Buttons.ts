@@ -2,10 +2,9 @@ import { IUIActionButtonDescriptor, RoomTypeFilter, UIActionButtonContext } from
 
 export const buttons: Array<IUIActionButtonDescriptor> = [
     {
-        actionId: 'welcome-config-room', // this identifies your button in the interaction event
-        labelI18n: 'Welcome_ConfigRoomButton', // key of the i18n string containing the name of the button
-        context: UIActionButtonContext.ROOM_ACTION, // in what context the action button will be displayed in the UI
-        // If you want to choose `when` the button should be displayed
+        actionId: 'welcome-config-room',
+        labelI18n: 'Welcome_ConfigRoomButton',
+        context: UIActionButtonContext.ROOM_ACTION,
         when: {
             roomTypes: [
                 RoomTypeFilter.PUBLIC_CHANNEL, 
@@ -15,7 +14,9 @@ export const buttons: Array<IUIActionButtonDescriptor> = [
                 RoomTypeFilter.PUBLIC_DISCUSSION,
                 RoomTypeFilter.PRIVATE_DISCUSSION,
             ],
+            hasOneRole: ['admin', 'moderator', 'owner', 'leader']
         }
+
     },
 
 ]
